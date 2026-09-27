@@ -1,6 +1,6 @@
 # AegisX
 
-**My Bharat Hackathon · Theme: Digital Safety and Cyber Fraud Awareness**
+** · Theme: Digital Safety and Cyber Fraud Awareness**
 
 A citizen-centric digital-safety companion. Paste a suspicious message or link and get an
 explainable, rule-based risk assessment — then clear guidance on what to do next.
@@ -89,13 +89,13 @@ that time — the prefix is required for Vite to expose a variable to client cod
 
 ## Available scripts
 
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Start the local dev server with hot reload |
-| `npm run build` | Type-check (`tsc -b`) and produce a production build in `dist/` |
+| Command           | Purpose                                                              |
+| ----------------- | -------------------------------------------------------------------- |
+| `npm run dev`     | Start the local dev server with hot reload                           |
+| `npm run build`   | Type-check (`tsc -b`) and produce a production build in `dist/`      |
 | `npm run preview` | Serve the production build locally, to sanity-check before deploying |
-| `npm test` | Run the automated test suite (Vitest) |
-| `npm run lint` | Run `oxlint` |
+| `npm test`        | Run the automated test suite (Vitest)                                |
+| `npm run lint`    | Run `oxlint`                                                         |
 
 ## Project structure
 
