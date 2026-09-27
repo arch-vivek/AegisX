@@ -23,14 +23,29 @@ export interface AnalysisResult {
   guidance: string[]
 }
 
-const SEVERITY_POINTS: Record<Severity, number> = { low: 6, medium: 14, high: 28 }
+// Weights are calibrated so that a single "high" severity indicator is, on its
+// own, already enough to cross the High-risk threshold below (e.g. a direct OTP
+// request or a brand name paired with a look-alike domain each independently
+// warrant a strong warning). "medium" and "low" signals need to accumulate.
+const SEVERITY_POINTS: Record<Severity, number> = { low: 8, medium: 20, high: 50 }
 
 function push(list: Indicator[], id: string, label: string, detail: string, severity: Severity) {
   if (list.some((i) => i.id === id)) return
   list.push({ id, label, detail, severity, points: SEVERITY_POINTS[severity] })
 }
 
-const URL_REGEX = /(https?:\/\/[^\s<>"')]+|www\.[^\s<>"')]+)/gi
+// Matches explicit http(s)/www links AND bare domains ending in a recognised
+// TLD (e.g. "hdfc-kyc-update.xyz/verify" with no scheme at all) — real scam
+// SMS/WhatsApp messages very often omit the "http://" or "www." prefix.
+const KNOWN_TLDS = [
+  "com", "net", "org", "in", "co", "io", "info", "online", "site", "shop", "link", "click",
+  "gov.in", "co.in", "org.in", "net.in", "nic.in",
+  "xyz", "top", "tk", "ml", "ga", "cf", "club", "work", "support", "win", "live", "icu", "buzz", "rest",
+]
+const URL_REGEX = new RegExp(
+  `(https?:\\/\\/[^\\s<>"')]+|www\\.[^\\s<>"')]+|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+(?:${KNOWN_TLDS.join("|")})(?:\\/[^\\s<>"')]*)?)`,
+  "gi"
+)
 const SHORTENERS = ["bit.ly", "tinyurl.com", "t.co", "cutt.ly", "is.gd", "rebrand.ly", "shorturl.at", "tiny.cc", "goo.gl", "ow.ly"]
 const RISKY_TLDS = [".xyz", ".top", ".tk", ".ml", ".ga", ".cf", ".club", ".work", ".support", ".win", ".live", ".icu", ".buzz", ".rest"]
 const BRAND_KEYWORDS = [
@@ -65,7 +80,7 @@ export function analyzeUrl(raw: string, indicators: Indicator[]) {
     push(indicators, "ip-host", "Raw IP address instead of a domain", "Legitimate services almost never send links that point straight at a numeric IP address.", "high")
   }
   if (parsed.protocol !== "https:") {
-    push(indicators, "no-https", "Not using a secure (HTTPS) connection", "Data sent to this link is not encrypted in transit.", "medium")
+    push(indicators, "no-https", "Not using a secure (HTTPS) connection", "Data sent to this link is not encrypted in transit. Weak on its own — many older legitimate sites still lack HTTPS — but it adds to other signals.", "low")
   }
   if (raw.includes("@")) {
     push(indicators, "at-symbol", "\"@\" symbol inside the link", "Browsers ignore everything before an \"@\", so the real destination can be hidden after it.", "high")
