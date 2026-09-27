@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Atkinson Hyperlegible", ui-sans-serif, system-ui, sans-serif;
+
+  --color-background: #F8FAFC;
+  --color-foreground: #020617;
+  --color-card: #FFFFFF;
+  --color-card-foreground: #020617;
+  --color-primary: #0F172A;
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: #334155;
+  --color-secondary-foreground: #FFFFFF;
+  --color-accent: #0369A1;
+  --color-accent-foreground: #FFFFFF;
+  --color-muted: #E8ECF1;
+  --color-muted-foreground: #475569;
+  --color-border: #E2E8F0;
+  --color-destructive: #DC2626;
+  --color-destructive-foreground: #FFFFFF;
+  --color-success: #15803D;
+  --color-success-foreground: #FFFFFF;
+  --color-warning: #B45309;
+  --color-warning-foreground: #FFFFFF;
+  --color-ring: #0F172A;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  .dark {
+    color-scheme: dark;
+    --color-background: #0B1220;
+    --color-foreground: #F1F5F9;
+    --color-card: #111A2E;
+    --color-card-foreground: #F1F5F9;
+    --color-primary: #E2E8F0;
+    --color-primary-foreground: #0F172A;
+    --color-secondary: #1E293B;
+    --color-secondary-foreground: #F1F5F9;
+    --color-accent: #38BDF8;
+    --color-accent-foreground: #0B1220;
+    --color-muted: #1E293B;
+    --color-muted-foreground: #94A3B8;
+    --color-border: #1E293B;
+    --color-destructive: #F87171;
+    --color-destructive-foreground: #450A0A;
+    --color-success: #4ADE80;
+    --color-success-foreground: #052E16;
+    --color-warning: #FBBF24;
+    --color-warning-foreground: #451A03;
+    --color-ring: #E2E8F0;
+  }
+
+  * {
+    border-color: var(--color-border);
+    outline-color: var(--color-ring);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  background: var(--color-accent);
+  color: var(--color-accent-foreground);
+  padding: 0.75rem 1rem;
+  border-radius: 0 0 0.5rem 0;
+}
+.skip-link:focus {
+  left: 0;
+}
