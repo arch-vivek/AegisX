@@ -40,7 +40,7 @@
     "puppeteer": "^25.12.0",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
-    "vite": "^8.3.0",
+    "vite": "^8.3.2",
     "vitest": "^5.0.2"
   },
   "description": "AegisX: citizen digital-safety and cyber fraud awareness tool (independent project, My Bharat Hackathon)",
