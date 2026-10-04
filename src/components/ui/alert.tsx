@@ -28,8 +28,8 @@ function Alert({
   )
 }
 
-function AlertTitle({ className, ...props }: React.ComponentProps<"h4">) {
-  return <h4 className={cn("font-bold leading-tight", className)} {...props} />
+function AlertTitle({ className, ...props }: React.ComponentProps<"p">) {
+  return <p className={cn("font-bold leading-tight", className)} {...props} />
 }
 
 function AlertDescription({ className, ...props }: React.ComponentProps<"div">) {

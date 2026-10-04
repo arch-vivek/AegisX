@@ -1,12 +1,12 @@
-import { useState } from "react"
-import { ShieldAlert, ShieldCheck, ShieldQuestion, Loader2 } from "lucide-react"
+import { useId, useState } from "react"
+import { ShieldAlert, ShieldCheck, ShieldQuestion } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
-import { analyze, type AnalysisResult, type Severity } from "@/lib/riskEngine"
+import { analyze, MAX_INPUT_CHARS, type AnalysisResult, type Severity } from "@/lib/riskEngine"
 import { recordAnalysis } from "@/lib/stats"
 
 const SEVERITY_LABEL: Record<Severity, string> = { low: "Minor signal", medium: "Moderate signal", high: "Strong signal" }
@@ -23,13 +23,13 @@ const EXAMPLES = [
 
 function LevelBanner({ result }: { result: AnalysisResult }) {
   const config = {
-    High: { icon: ShieldAlert, variant: "destructive" as const, text: "High risk — treat this as likely fraudulent" },
-    Medium: { icon: ShieldQuestion, variant: "warning" as const, text: "Medium risk — verify before acting" },
-    Low: { icon: ShieldCheck, variant: "default" as const, text: "Low risk — no strong red flags found" },
+    High: { icon: ShieldAlert, variant: "destructive" as const, text: "High risk: treat this as likely fraudulent" },
+    Medium: { icon: ShieldQuestion, variant: "warning" as const, text: "Medium risk: verify before acting" },
+    Low: { icon: ShieldCheck, variant: "default" as const, text: "Low risk: no strong red flags found" },
   }[result.level]
   const Icon = config.icon
   return (
-    <Alert variant={config.variant}>
+    <Alert variant={config.variant} role="group">
       <Icon className="h-5 w-5" aria-hidden="true" />
       <div>
         <AlertTitle>{config.text}</AlertTitle>
@@ -44,19 +44,18 @@ function LevelBanner({ result }: { result: AnalysisResult }) {
 export function Analyzer() {
   const [input, setInput] = useState("")
   const [result, setResult] = useState<AnalysisResult | null>(null)
-  const [loading, setLoading] = useState(false)
+  const helpId = useId()
 
-  function runAnalysis(text: string) {
+  function run(text: string) {
     if (!text.trim()) return
-    setLoading(true)
-    // Small artificial delay makes the "processing" stages legible in a demo;
-    // the analysis itself is synchronous rule matching, done entirely on-device.
-    setTimeout(() => {
-      const r = analyze(text)
-      setResult(r)
-      recordAnalysis(r.level)
-      setLoading(false)
-    }, 350)
+    const r = analyze(text)
+    setResult(r)
+    recordAnalysis(r.level)
+  }
+
+  function clearAll() {
+    setInput("")
+    setResult(null)
   }
 
   return (
@@ -65,36 +64,45 @@ export function Analyzer() {
         <h1 className="text-2xl font-bold text-primary">Analyze a message or link</h1>
         <p className="mt-1 text-muted-foreground">
           Paste the suspicious SMS, WhatsApp message, email text, or URL exactly as you received it.
-          Nothing you paste here is sent anywhere — analysis runs in your browser.
+          Analysis runs in your browser: what you paste is not sent anywhere and is not saved.
         </p>
       </div>
 
       <Card>
         <CardContent className="flex flex-col gap-3 pt-6">
-          <label htmlFor="analyzer-input" className="font-bold text-sm">
+          <label htmlFor="analyzer-input" className="text-sm font-bold">
             Message or link
           </label>
           <Textarea
             id="analyzer-input"
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            maxLength={MAX_INPUT_CHARS}
+            aria-describedby={helpId}
+            autoComplete="off"
+            spellCheck={false}
             placeholder="Paste a message or link here…"
             rows={5}
           />
+          <p id={helpId} className="text-xs text-muted-foreground">
+            {input.length} / {MAX_INPUT_CHARS} characters. Do not paste OTPs, passwords or card numbers.
+          </p>
           <div className="flex flex-wrap items-center gap-3">
-            <Button onClick={() => runAnalysis(input)} disabled={loading || !input.trim()}>
-              {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-              {loading ? "Analyzing…" : "Check this"}
+            <Button onClick={() => run(input)} disabled={!input.trim()}>
+              Check this
+            </Button>
+            <Button variant="outline" onClick={clearAll} disabled={!input && !result}>
+              Clear
             </Button>
             <span className="text-sm text-muted-foreground">or try an example:</span>
             {EXAMPLES.map((ex, i) => (
               <button
                 key={i}
                 type="button"
-                className="cursor-pointer text-sm font-bold text-accent underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring rounded"
+                className="min-h-11 cursor-pointer rounded px-1 text-sm font-bold text-accent underline underline-offset-4"
                 onClick={() => {
                   setInput(ex)
-                  runAnalysis(ex)
+                  run(ex)
                 }}
               >
                 Example {i + 1}
@@ -104,14 +112,23 @@ export function Analyzer() {
         </CardContent>
       </Card>
 
+      <div aria-live="polite" className="sr-only">
+        {result ? `Result: ${result.level} risk, score ${result.score} out of 100, ${result.indicators.length} signals found.` : ""}
+      </div>
+
       {result && (
-        <div className="flex flex-col gap-4" aria-live="polite">
+        <div className="flex flex-col gap-4">
           <LevelBanner result={result} />
+          {result.truncated && (
+            <p className="text-sm text-muted-foreground">
+              Only the first {MAX_INPUT_CHARS} characters were analysed.
+            </p>
+          )}
 
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Risk meter</CardTitle>
-              <CardDescription>Higher fill means more matched red-flag signals — always shown with a text level, never colour alone.</CardDescription>
+              <CardDescription>Higher fill means more matched red-flag signals. It is always shown with a text level, never colour alone.</CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
               <Progress
@@ -120,16 +137,16 @@ export function Analyzer() {
                 indicatorClassName={result.level === "High" ? "bg-destructive" : result.level === "Medium" ? "bg-warning" : "bg-success"}
               />
               <div className="mt-1 flex justify-between text-xs text-muted-foreground">
-                <span>0 — Low</span>
-                <span>50 — Medium</span>
-                <span>100 — High</span>
+                <span>0 (Low)</span>
+                <span>50 (Medium)</span>
+                <span>100 (High)</span>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Why this result — {result.indicators.length} signal(s) found</CardTitle>
+              <CardTitle className="text-base">Why this result: {result.indicators.length} signal(s) found</CardTitle>
               <CardDescription>Every AegisX result is explainable: these are the exact patterns matched.</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-3 pt-0">
@@ -139,7 +156,7 @@ export function Analyzer() {
                 result.indicators.map((ind) => (
                   <div key={ind.id} className="rounded-lg border border-border p-3">
                     <div className="mb-1 flex flex-wrap items-center gap-2">
-                      <span className="font-bold text-sm">{ind.label}</span>
+                      <span className="text-sm font-bold">{ind.label}</span>
                       <Badge variant={SEVERITY_VARIANT[ind.severity]}>{SEVERITY_LABEL[ind.severity]}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">{ind.detail}</p>

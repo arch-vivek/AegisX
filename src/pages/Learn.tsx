@@ -120,7 +120,7 @@ export function Learn() {
               <p className="mb-2 flex items-center gap-2 font-bold text-accent">
                 <Trophy className="h-5 w-5" aria-hidden="true" /> Score: {score} / {quizQuestions.length}
               </p>
-              <Progress value={(score / quizQuestions.length) * 100} className="mb-3" />
+              <Progress value={(score / quizQuestions.length) * 100} aria-label={`Quiz score: ${score} out of ${quizQuestions.length}`} className="mb-3" />
               <Button variant="outline" onClick={reset}>
                 Retake quiz
               </Button>

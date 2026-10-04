@@ -10,6 +10,8 @@ function Progress({
 }: React.ComponentProps<typeof ProgressPrimitive.Root> & { indicatorClassName?: string }) {
   return (
     <ProgressPrimitive.Root
+      value={value}
+      max={100}
       data-slot="progress"
       className={cn("relative h-3 w-full overflow-hidden rounded-full bg-muted", className)}
       {...props}

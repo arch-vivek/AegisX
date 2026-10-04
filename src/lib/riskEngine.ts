@@ -21,7 +21,13 @@ export interface AnalysisResult {
   score: number
   level: RiskLevel
   guidance: string[]
+  /** True when the input was longer than MAX_INPUT_CHARS and was cut before analysis. */
+  truncated: boolean
 }
+
+/** Upper bounds keep analysis fast and bounded regardless of what is pasted. */
+export const MAX_INPUT_CHARS = 5000
+export const MAX_URLS_ANALYZED = 10
 
 // Weights are calibrated so that a single "high" severity indicator is, on its
 // own, already enough to cross the High-risk threshold below (e.g. a direct OTP
@@ -150,9 +156,11 @@ export function analyzeMessageText(text: string, indicators: Indicator[]) {
 }
 
 export function analyze(rawInput: string): AnalysisResult {
-  const input = rawInput.trim()
+  const trimmed = rawInput.trim()
+  const truncated = trimmed.length > MAX_INPUT_CHARS
+  const input = truncated ? trimmed.slice(0, MAX_INPUT_CHARS) : trimmed
   const indicators: Indicator[] = []
-  const urlsFound = extractUrls(input)
+  const urlsFound = extractUrls(input).slice(0, MAX_URLS_ANALYZED)
 
   const looksLikeBareUrl = urlsFound.length === 1 && urlsFound[0].length >= input.length - 2
   if (looksLikeBareUrl) {
@@ -184,5 +192,5 @@ export function analyze(rawInput: string): AnalysisResult {
           "Stay cautious with any request for money, credentials, or personal information.",
         ]
 
-  return { input, urlsFound, indicators: indicators.sort((a, b) => SEVERITY_POINTS[b.severity] - SEVERITY_POINTS[a.severity]), score, level, guidance }
+  return { input, urlsFound, indicators: indicators.sort((a, b) => SEVERITY_POINTS[b.severity] - SEVERITY_POINTS[a.severity]), score, level, guidance, truncated }
 }
