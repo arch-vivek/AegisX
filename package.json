@@ -41,7 +41,7 @@
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "vite": "^8.3.0",
-    "vitest": "^5.0.2"
+    "vitest": "^5.0.3"
   },
   "description": "AegisX: citizen digital-safety and cyber fraud awareness tool (independent project, My Bharat Hackathon)",
   "license": "MIT",
